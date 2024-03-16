@@ -12,7 +12,6 @@ from official.projects.movinet.modeling import movinet_model
 import firebase_admin
 from firebase_admin import credentials, messaging
 import logging
-from pyngrok import ngrok
 import traceback
 from flask import send_file
 from io import BytesIO
@@ -24,13 +23,13 @@ from tensorflow import keras
 logging.basicConfig(level=logging.INFO)
 
 # Set up Ngrok authentication token
-ngrok.set_auth_token("2cwuKNigB4MOmhcqz2V7iaAsZqF_7f797rB1svrxrUAKGXmAK")
+#ngrok.set_auth_token("2cwuKNigB4MOmhcqz2V7iaAsZqF_7f797rB1svrxrUAKGXmAK")
 
 # Establish Ngrok tunnel with custom domain
-ngrok_tunnel = ngrok.connect(80, bind_tls=True, hostname="discrete-lately-killdeer.ngrok-free.app")
+#ngrok_tunnel = ngrok.connect(80, bind_tls=True, hostname="discrete-lately-killdeer.ngrok-free.app")
 
 # Print Ngrok URL
-print("Ngrok Tunnel URL:", ngrok_tunnel.public_url)
+#print("Ngrok Tunnel URL:", ngrok_tunnel.public_url)
 
 app = Flask(__name__)
 CORS(app)
@@ -48,15 +47,15 @@ recent_predictions = []
 predictions_list = []
 
 # Load YOLO model for object detection
-yolo_model_path = '/content/drive/MyDrive/best.pt'
+yolo_model_path = 'best.pt'
 yolo_model = YOLO(yolo_model_path)
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("/content/drive/MyDrive/daycare-237d8-firebase-adminsdk-fza8w-ff3a089ab7.json")
+    cred = credentials.Certificate("daycare-237d8-firebase-adminsdk-fza8w-ff3a089ab7.json")
     firebase_admin.initialize_app(cred)
 
 # Load the pre-trained video classification model
-video_classification_model_path = "/content/drive/MyDrive/movinet_saved_model"  # Update the path accordingly
+video_classification_model_path = "movinet_saved_model"  # Update the path accordingly
 video_classification_model = keras.layers.TFSMLayer(video_classification_model_path, call_endpoint='serving_default')
 
 # Define class names for video classification
