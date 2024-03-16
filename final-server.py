@@ -56,7 +56,7 @@ if not firebase_admin._apps:
 
 # Load the pre-trained video classification model
 video_classification_model_path = "movinet_saved_model"  # Update the path accordingly
-video_classification_model = keras.layers.TFSMLayer(video_classification_model_path, call_endpoint='serving_default')
+video_classification_model = tf.keras.models.load_model(video_classification_model_path)
 
 # Define class names for video classification
 class_names = [
