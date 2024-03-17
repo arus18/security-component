@@ -188,7 +188,7 @@ def detect_objects():
                         harmful_object_found = True
 
                         # Draw boxes on the frame
-                        x1, y1, x2, y2 = map(int, box.xyxy)
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
                         cv2.rectangle(imgs[frame_index], (x1, y1), (x2, y2), (0, 255, 0), 2)
 
                         # Add prediction to recent predictions list for the specific camera
