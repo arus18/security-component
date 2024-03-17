@@ -155,7 +155,7 @@ def save_token():
 
 
 # Endpoint for object detection
-@app.route('/detect_objects', methods=['GET'])
+@app.route('/detect_objects', methods=['POST'])
 def detect_objects():
     try:
         # Read camera IP from the request
