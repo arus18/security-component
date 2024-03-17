@@ -136,23 +136,30 @@ def perform_video_classification_batch(camera_ip, frames):
         print(f"Error during video classification: {e}")
         return []
 
-# Function to draw bounding boxes on the image
-def draw_bounding_boxes(frame, boxes, color=(0, 255, 0)):
-  """
-  Draws bounding boxes on a frame.
+def draw_bounding_boxes(frame, boxes, color=(0, 0, 255)):
+    """
+    Draws bounding boxes on a frame.
 
-  Args:
-    frame: The image frame as a NumPy array.
-    boxes: A list of bounding box data (e.g., xmin, ymin, xmax, ymax).
-    color: The color of the bounding box (BGR format).
+    Args:
+        frame: The image frame as a NumPy array.
+        boxes: A list of bounding box data in either `xywh` or `xyxy` format.
+            - If `xywh` format: [x_center, y_center, width, height]
+            - If `xyxy` format: [xmin, ymin, xmax, ymax]
+        color: The color of the bounding box (BGR format).
 
-  Returns:
-    The frame with bounding boxes drawn on it.
-  """
-  for box in boxes:
-    xmin, ymin, xmax, ymax = box
-    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 2)
-  return frame
+    Returns:
+        The frame with bounding boxes drawn on it.
+    """
+    for box in boxes:
+        if len(box) == 4:  # Check if box has 4 values (xywh)
+            x_center, y_center, width, height = box
+            xmin = int(x_center - width / 2)
+            ymin = int(y_center - height / 2)
+            xmax = int(xmin + width)
+            ymax = int(ymin + height)
+            box = [xmin, ymin, xmax, ymax]  # Convert to xyxy
+        cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), color, 2)
+    return frame
 
 # Function to send Firebase push notification
 #def send_push_notification(camera_ip, predictions):
@@ -170,6 +177,14 @@ def save_token():
 # Endpoint for object detection
 @app.route('/detect_objects', methods=['POST'])
 def detect_objects():
+    """
+    Performs object detection on a batch of images and stores predictions
+    with bounding boxes for harmful objects.
+
+    Returns:
+        A JSON response indicating success or an error message with status code.
+    """
+
     try:
         # Read camera IP from the request
         camera_ip = request.form.get('camera_ip')
@@ -189,27 +204,30 @@ def detect_objects():
                 boxes = r.boxes
 
                 for box in boxes:
-                    # confidence
+                    # Extract confidence and class index
                     confidence = box.conf[0].item()
-                    print(confidence)
-
-                    # class index
                     cls = int(box.cls[0])
 
-                    # Check if a harmful object is found
+                    # Check for harmful object
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
                         harmful_object_found = True
 
-                        # Draw boxes on the frame
+                        # Access the corresponding frame and convert bounding box format (if needed)
                         frame = imgs[frame_index]
+                        if len(box) == 4:  # Check if box has 4 values (xywh)
+                            x_center, y_center, width, height = box
+                            xmin = int(x_center - width / 2)
+                            ymin = int(y_center - height / 2)
+                            xmax = int(xmin + width)
+                            ymax = int(ymin + height)
+                            converted_box = [xmin, ymin, xmax, ymax]
+                        else:
+                            converted_box = box  # Already in xyxy format
 
-                        # Directly draw bounding boxes for harmful objects
-                        draw_bounding_boxes(frame, [box], color=(0, 0, 255))  # Use red for harmful objects
+                        # Draw bounding boxes for harmful objects
+                        encoded_frame = draw_bounding_boxes(frame, [converted_box], color=(0, 0, 255))
 
-                        # Encode modified frame as a byte array
-                        encoded_frame = cv2.imencode('.jpg', frame)[1].tobytes()
-
-                        # Add prediction to recent predictions list for the specific camera
+                        # Add prediction to recent predictions list
                         recent_object_detection_predictions.setdefault(camera_ip, []).append({
                             'confidence_score': confidence,
                             'image': encoded_frame
@@ -222,7 +240,7 @@ def detect_objects():
         return 'Object detection completed'
 
     except Exception as e:
-        traceback.print_exc()  # Print the traceback
+        traceback.print_exc()
         error_message = f"Error during object detection: {e}"
         print(error_message)
         return jsonify(error=error_message), 500
