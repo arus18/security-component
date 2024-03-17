@@ -18,6 +18,7 @@ from io import BytesIO
 from flask import Flask, Response
 from flask_cors import CORS
 from tensorflow import keras
+from datetime import datetime
 
 
 logging.basicConfig(level=logging.INFO)
@@ -70,7 +71,7 @@ class_names = [
 
 # Configuration parameters
 batch_size = 16
-object_detection_threshold = 0.5
+object_detection_threshold = 0.48
 video_classification_threshold = 0.5
 
 # Function to perform object detection on a batch of frames
@@ -268,9 +269,34 @@ def send_notification():
         return jsonify({"message": "Notification sent successfully.", "response": response}), 200
     except Exception as e:
         return jsonify({"message": "Failed to send notification.", "error": str(e)}), 500
-
+        
 
 @app.route('/recent_object_detection_predictions', methods=['GET'])
+def get_recent_object_detection_predictions():
+  camera_ip = request.args.get('camera_ip')
+  if camera_ip is None:
+    return jsonify(message="Missing camera_ip parameter"), 400
+
+  predictions = recent_object_detection_predictions[camera_ip]  # Replace with your data store logic
+
+  if not predictions:
+    return jsonify(message="No recent object detection predictions available for the specified camera IP"), 404
+
+  # Add unique ID and format timestamp
+  processed_predictions = []
+  for prediction in predictions:
+    unique_id = str(uuid.uuid4())  # Generate a unique ID using uuid library
+    processed_prediction = {
+      "id": unique_id,
+      "confidence": prediction["confidence_score"],
+      "timestamp": prediction["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),  # Format timestamp for readability
+      "image": base64.b64encode(prediction["image"]).decode('utf-8') if "image" in prediction else None,  # Handle optional image data
+    }
+    processed_predictions.append(processed_prediction)
+
+  return jsonify(processed_predictions)
+
+"""@app.route('/recent_object_detection_predictions', methods=['GET'])
 def get_recent_object_detection_predictions():
     camera_ip = request.args.get('camera_ip')
     if camera_ip in recent_object_detection_predictions:
@@ -290,7 +316,7 @@ def get_recent_object_detection_predictions():
 
         return jsonify(encoded_predictions)
     else:
-        return jsonify(message="No recent object detection predictions available for the specified camera IP")
+        return jsonify(message="No recent object detection predictions available for the specified camera IP")"""
 
 
 # Endpoint for fetching recent video classification predictions
