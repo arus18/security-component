@@ -222,7 +222,10 @@ def detect_objects():
                             ymax = int(ymin + height)
                             converted_box = [xmin, ymin, xmax, ymax]
                         else:
-                            converted_box = box  # Already in xyxy format
+                            converted_box = box
+
+                        print(f"Converted bounding box: {converted_box}")
+
 
                         # Draw bounding boxes for harmful objects
                         encoded_frame = draw_bounding_boxes(frame, [converted_box], color=(0, 0, 255))
