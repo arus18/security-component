@@ -287,7 +287,7 @@ def get_recent_object_detection_predictions():
   processed_predictions = []
   for prediction in predictions:
     unique_id = str(uuid.uuid4())
-    current_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Generate a unique ID using uuid library
+    current_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Generate a unique ID using uuid library
     processed_prediction = {
       "id": unique_id,
       "confidence": prediction["confidence_score"],
