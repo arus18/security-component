@@ -136,36 +136,21 @@ def perform_video_classification_batch(camera_ip, frames):
         print(f"Error during video classification: {e}")
         return []
 
-def draw_bounding_boxes(frame, boxes, color=(0, 0, 255)):
-    """
-    Draws bounding boxes on a frame.
+def draw_boxes(frame, results):
+    annotated_frame = frame.copy()
 
-    Args:
-        frame: The image frame as a NumPy array.
-        boxes: A list of bounding box data in either `xywh` or `xyxy` format.
-            - If `xywh` format: [x_center, y_center, width, height]
-            - If `xyxy` format: [xmin, ymin, xmax, ymax]
-        color: The color of the bounding box (BGR format).
+    # Process object detection results
+    for r in results:
+        boxes = r.boxes
 
-    Returns:
-        The frame with bounding boxes drawn on it.
-    """
-    for box in boxes:
-        if len(box) == 4:  # Check if box has 4 values (xywh)
-            x_center, y_center, width, height = box
-            xmin = int(x_center - width / 2)
-            ymin = int(y_center - height / 2)
-            xmax = int(xmin + width)
-            ymax = int(ymin + height)
-            box = [xmin, ymin, xmax, ymax]  # Convert to xyxy
+        for box in boxes:
+            # Extract bounding box coordinates
+            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
-        # Fix: Access coordinates correctly from the Boxes object
-        x_min, y_min, x_max, y_max = box[0].numpy()  # Access coordinates from tensor
+            # Draw bounding box on the frame
+            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color, 2)
-    return frame
-
-
+    return annotated_frame
 # Function to send Firebase push notification
 #def send_push_notification(camera_ip, predictions):
 
@@ -205,41 +190,24 @@ def detect_objects():
 
         # Process object detection results
         for frame_index, results in enumerate(results_batch):
+            annotated_frame = imgs[frame_index].copy()  # Copy original frame for annotation
             for r in results:
                 boxes = r.boxes
-
                 for box in boxes:
                     # Extract confidence and class index
                     confidence = box.conf[0].item()
                     cls = int(box.cls[0])
-
                     # Check for harmful object
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
-                        harmful_object_found = True
-
-                        # Access the corresponding frame and convert bounding box format (if needed)
-                        frame = imgs[frame_index]
-                        if len(box) == 4:  # Check if box has 4 values (xywh)
-                            x_center, y_center, width, height = box
-                            xmin = int(x_center - width / 2)
-                            ymin = int(y_center - height / 2)
-                            xmax = int(xmin + width)
-                            ymax = int(ymin + height)
-                            converted_box = [xmin, ymin, xmax, ymax]
-                        else:
-                            converted_box = box
-
-                        print(f"Converted bounding box: {converted_box}")
-
-
-                        # Draw bounding boxes for harmful objects
-                        encoded_frame = draw_bounding_boxes(frame, [converted_box], color=(0, 0, 255))
-
-                        # Add prediction to recent predictions list
-                        recent_object_detection_predictions.setdefault(camera_ip, []).append({
-                            'confidence_score': confidence,
-                            'image': encoded_frame
-                        })
+                        # Draw bounding box on the annotated frame
+                        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                        cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            # Save annotated frame to recent predictions
+            encoded_frame = cv2.imencode('.jpg', annotated_frame)[1].tobytes()
+            recent_object_detection_predictions.setdefault(camera_ip, []).append({
+                'confidence_score': confidence,
+                'image': encoded_frame
+            })
 
         # Limit the recent predictions size for the specific camera
         if camera_ip is not None and camera_ip in recent_object_detection_predictions:
