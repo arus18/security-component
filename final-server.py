@@ -19,6 +19,7 @@ from flask import Flask, Response
 from flask_cors import CORS
 from tensorflow import keras
 from datetime import datetime
+import uuid
 
 
 logging.basicConfig(level=logging.INFO)
@@ -269,7 +270,7 @@ def send_notification():
         return jsonify({"message": "Notification sent successfully.", "response": response}), 200
     except Exception as e:
         return jsonify({"message": "Failed to send notification.", "error": str(e)}), 500
-        
+
 
 @app.route('/recent_object_detection_predictions', methods=['GET'])
 def get_recent_object_detection_predictions():
