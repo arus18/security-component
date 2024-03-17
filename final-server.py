@@ -158,8 +158,13 @@ def draw_bounding_boxes(frame, boxes, color=(0, 0, 255)):
             xmax = int(xmin + width)
             ymax = int(ymin + height)
             box = [xmin, ymin, xmax, ymax]  # Convert to xyxy
-        cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), color, 2)
+
+        # Fix: Access coordinates correctly from the Boxes object
+        x_min, y_min, x_max, y_max = box[0].numpy()  # Access coordinates from tensor
+
+        cv2.rectangle(frame, (int(x_min), int(y_min)), (int(x_max), int(y_max)), color, 2)
     return frame
+
 
 # Function to send Firebase push notification
 #def send_push_notification(camera_ip, predictions):
