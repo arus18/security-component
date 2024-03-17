@@ -123,7 +123,7 @@ def perform_video_classification_batch(camera_ip, frames):
             max_confidence_index = np.argmax(clip_prediction)
             predicted_class = class_names[max_confidence_index]
             confidence_score = clip_prediction[max_confidence_index]
-
+            print(predicted_class)
             # Generate clip ID
             clip_id = f"{camera_ip}_clip_{clip_index}"
 
@@ -137,11 +137,22 @@ def perform_video_classification_batch(camera_ip, frames):
         return []
 
 # Function to draw bounding boxes on the image
-def draw_boxes(image, boxes):
-    for box in boxes:
-        x1, y1, x2, y2, _ = map(int, box)
-        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    return image
+def draw_bounding_boxes(frame, boxes, color=(0, 255, 0)):
+  """
+  Draws bounding boxes on a frame.
+
+  Args:
+    frame: The image frame as a NumPy array.
+    boxes: A list of bounding box data (e.g., xmin, ymin, xmax, ymax).
+    color: The color of the bounding box (BGR format).
+
+  Returns:
+    The frame with bounding boxes drawn on it.
+  """
+  for box in boxes:
+    xmin, ymin, xmax, ymax = box
+    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color, 2)
+  return frame
 
 # Function to send Firebase push notification
 #def send_push_notification(camera_ip, predictions):
@@ -190,13 +201,18 @@ def detect_objects():
                         harmful_object_found = True
 
                         # Draw boxes on the frame
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        cv2.rectangle(imgs[frame_index], (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        frame = imgs[frame_index]
+
+                        # Directly draw bounding boxes for harmful objects
+                        draw_bounding_boxes(frame, [box], color=(0, 0, 255))  # Use red for harmful objects
+
+                        # Encode modified frame as a byte array
+                        encoded_frame = cv2.imencode('.jpg', frame)[1].tobytes()
 
                         # Add prediction to recent predictions list for the specific camera
                         recent_object_detection_predictions.setdefault(camera_ip, []).append({
                             'confidence_score': confidence,
-                            'image': frames[frame_index]
+                            'image': encoded_frame
                         })
 
         # Limit the recent predictions size for the specific camera
@@ -297,28 +313,6 @@ def get_recent_object_detection_predictions():
     processed_predictions.append(processed_prediction)
 
   return jsonify(processed_predictions)
-
-"""@app.route('/recent_object_detection_predictions', methods=['GET'])
-def get_recent_object_detection_predictions():
-    camera_ip = request.args.get('camera_ip')
-    if camera_ip in recent_object_detection_predictions:
-        predictions = recent_object_detection_predictions[camera_ip]
-
-        # Encode the image data in base64 format
-        encoded_predictions = []
-        for prediction in predictions:
-            encoded_prediction = {}
-            for key, value in prediction.items():
-                if key == 'image':
-                    # Encode the image data in base64 format
-                    encoded_prediction[key] = base64.b64encode(value).decode('utf-8')
-                else:
-                    encoded_prediction[key] = value
-            encoded_predictions.append(encoded_prediction)
-
-        return jsonify(encoded_predictions)
-    else:
-        return jsonify(message="No recent object detection predictions available for the specified camera IP")"""
 
 
 # Endpoint for fetching recent video classification predictions
