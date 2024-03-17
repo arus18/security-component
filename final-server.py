@@ -286,11 +286,12 @@ def get_recent_object_detection_predictions():
   # Add unique ID and format timestamp
   processed_predictions = []
   for prediction in predictions:
-    unique_id = str(uuid.uuid4())  # Generate a unique ID using uuid library
+    unique_id = str(uuid.uuid4())
+    current_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Generate a unique ID using uuid library
     processed_prediction = {
       "id": unique_id,
       "confidence": prediction["confidence_score"],
-      "timestamp": prediction["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),  # Format timestamp for readability
+      "timestamp": current_timestamp,  # Format timestamp for readability
       "image": base64.b64encode(prediction["image"]).decode('utf-8') if "image" in prediction else None,  # Handle optional image data
     }
     processed_predictions.append(processed_prediction)
