@@ -202,12 +202,13 @@ def detect_objects():
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            # Save annotated frame to recent predictions
-            encoded_frame = cv2.imencode('.jpg', annotated_frame)[1].tobytes()
-            recent_object_detection_predictions.setdefault(camera_ip, []).append({
-                'confidence_score': confidence,
-                'image': encoded_frame
-            })
+
+                        # Save annotated frame to recent predictions
+                        encoded_frame = cv2.imencode('.jpg', annotated_frame)[1].tobytes()
+                        recent_object_detection_predictions.setdefault(camera_ip, []).append({
+                            'confidence_score': confidence,
+                            'image': encoded_frame
+                        })
 
         # Limit the recent predictions size for the specific camera
         if camera_ip is not None and camera_ip in recent_object_detection_predictions:
@@ -220,6 +221,7 @@ def detect_objects():
         error_message = f"Error during object detection: {e}"
         print(error_message)
         return jsonify(error=error_message), 500
+
 
 
 @app.route('/save_activities', methods=['POST'])
