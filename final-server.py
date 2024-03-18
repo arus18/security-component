@@ -162,6 +162,7 @@ def get_annotated_image():
         # Get prediction ID and camera IP from request
         prediction_id = request.args.get('prediction_id')
         camera_ip = request.args.get('camera_ip')
+        print(camera_ip)
         print(recent_object_detection_predictions.keys())
         if camera_ip in recent_object_detection_predictions:
             # Find the prediction with matching prediction ID
