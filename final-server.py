@@ -161,6 +161,7 @@ def get_annotated_image():
         if camera_ip in recent_object_detection_predictions:
             # Find the prediction with matching prediction ID
             predictions = recent_object_detection_predictions[camera_ip]
+            print(predictions)
             for prediction in predictions:
                 if prediction['prediction_id'] == prediction_id:
                     # Retrieve the annotated image
@@ -221,7 +222,10 @@ def detect_objects():
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
 
                         prediction_id = str(uuid.uuid4())
+
                         title = f"Harmful object detetcted in, {camera_name}"
+                        print(camera_name)
+                        print(title)
                         send_notification(camera_ip,prediction_id,title)
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
