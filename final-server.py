@@ -291,7 +291,6 @@ def classify_video():
 def send_notification(camera_ip, prediction_id):
     title = "Notification Title"
     body = f"Camera IP: {camera_ip} | Prediction ID: {prediction_id}"
-    client_token = "device_registration_token"  # Specify the registration token of the device
 
     message = messaging.Message(
         notification=messaging.Notification(title=title, body=body),
