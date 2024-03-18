@@ -44,8 +44,8 @@ recent_object_detection_predictions = {}  # Dictionary to store recent object de
 recent_video_classification_predictions = {}  # Dictionary to store recent video classification predictions for each camera
 activities_to_detect = {}
 client_token = None
-max_recent_predictions = 10  # Maximum number of recent predictions to store
-RECENT_PREDICTIONS_SIZE = 10
+max_recent_predictions = 20  # Maximum number of recent predictions to store
+RECENT_PREDICTIONS_SIZE = 20
 # Define a variable to store the notification sending status (True: enabled, False: disabled)
 send_notifications_enabled = True
 
@@ -165,6 +165,7 @@ def get_annotated_image():
         camera_ip = data.get('camera_ip')
 
         print(camera_ip)
+        print(prediction_id)
 
         if camera_ip in recent_object_detection_predictions:
             predictions = recent_object_detection_predictions[camera_ip]
@@ -226,8 +227,7 @@ def detect_objects():
                         prediction_id = str(uuid.uuid4())
 
                         title = f"Harmful object detetcted in, {camera_name}"
-                        
-                        send_notification(camera_ip,prediction_id,title)
+
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
@@ -240,6 +240,8 @@ def detect_objects():
                             'image': encoded_frame,
                             'prediction_id':prediction_id
                         })
+
+                        send_notification(camera_ip,prediction_id,title)
 
         # Limit the recent predictions size for the specific camera
         if camera_ip is not None and camera_ip in recent_object_detection_predictions:
