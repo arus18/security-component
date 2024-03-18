@@ -20,6 +20,8 @@ from flask_cors import CORS
 from tensorflow import keras
 from datetime import datetime
 import uuid
+import time
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +48,9 @@ max_recent_predictions = 10  # Maximum number of recent predictions to store
 RECENT_PREDICTIONS_SIZE = 10
 # Define a variable to store the notification sending status (True: enabled, False: disabled)
 send_notifications_enabled = True
+
+last_notification_time = None
+delay_between_notifications = 5
 
 recent_predictions = []
 predictions_list = []
@@ -157,11 +162,10 @@ def get_annotated_image():
         # Get prediction ID and camera IP from request
         prediction_id = request.args.get('prediction_id')
         camera_ip = request.args.get('camera_ip')
-
+        print(recent_object_detection_predictions)
         if camera_ip in recent_object_detection_predictions:
             # Find the prediction with matching prediction ID
             predictions = recent_object_detection_predictions[camera_ip]
-            print(predictions)
             for prediction in predictions:
                 if prediction['prediction_id'] == prediction_id:
                     # Retrieve the annotated image
@@ -308,14 +312,25 @@ def classify_video():
         return jsonify(error=str(e)), 500
 
 
-def send_notification(camera_ip, prediction_id,title):
-    body = f"{camera_ip} | {prediction_id}"
+def send_notification(camera_ip, prediction_id, title):
+    global last_notification_time
 
-    message = messaging.Message(
-        notification=messaging.Notification(title=title, body=body),
-        token=client_token,
-    )
-    response = messaging.send(message)
+    # Get the current time
+    current_time = time.time()
+
+    # Check if it's been enough time since the last notification
+    if last_notification_time is None or current_time - last_notification_time >= delay_between_notifications:
+        # Send the notification
+        body = f"{camera_ip} | {prediction_id}"
+
+        message = messaging.Message(
+            notification=messaging.Notification(title=title, body=body),
+            token=client_token,
+        )
+        response = messaging.send(message)
+
+        # Update the last notification time
+        last_notification_time = current_time
 
 
 @app.route('/recent_object_detection_predictions', methods=['GET'])
