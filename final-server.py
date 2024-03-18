@@ -290,7 +290,7 @@ def classify_video():
 
 def send_notification(camera_ip, prediction_id):
     title = "Notification Title"
-    body = f"Camera IP: {camera_ip} | Prediction ID: {prediction_id}"
+    body = f"{camera_ip} | {prediction_id}"
 
     message = messaging.Message(
         notification=messaging.Notification(title=title, body=body),
