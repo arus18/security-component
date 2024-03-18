@@ -50,7 +50,7 @@ RECENT_PREDICTIONS_SIZE = 10
 send_notifications_enabled = True
 
 last_notification_time = None
-delay_between_notifications = 5
+delay_between_notifications = 10
 
 recent_predictions = []
 predictions_list = []
@@ -156,7 +156,7 @@ def save_token():
     return jsonify(message="Token saved successfully."), 200
 
 
-@app.route('/get_annotated_image', methods=['POST'])
+@app.route('/get_annotated_image', methods=['GET'])
 def get_annotated_image():
     try:
         # Get prediction ID and camera IP from request
