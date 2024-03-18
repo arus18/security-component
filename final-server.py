@@ -159,22 +159,19 @@ def save_token():
 @app.route('/get_annotated_image', methods=['POST'])
 def get_annotated_image():
     try:
-        # Get prediction ID and camera IP from request
-        prediction_id = request.args.get('prediction_id')
-        camera_ip = request.args.get('camera_ip')
+        # Get JSON data from the request body
+        data = request.json
+        prediction_id = data.get('prediction_id')
+        camera_ip = data.get('camera_ip')
+
         print(camera_ip)
-        print(recent_object_detection_predictions.keys())
+
         if camera_ip in recent_object_detection_predictions:
-            # Find the prediction with matching prediction ID
             predictions = recent_object_detection_predictions[camera_ip]
             for prediction in predictions:
                 if prediction['prediction_id'] == prediction_id:
-                    # Retrieve the annotated image
                     annotated_image = prediction['image']
-
-                    # Convert the image to base64
                     base64_image = base64.b64encode(annotated_image).decode('utf-8')
-
                     return jsonify({'annotated_image_base64': base64_image})
 
             return jsonify(error='Prediction ID not found for the specified camera IP'), 404
@@ -229,8 +226,7 @@ def detect_objects():
                         prediction_id = str(uuid.uuid4())
 
                         title = f"Harmful object detetcted in, {camera_name}"
-                        print(camera_name)
-                        print(title)
+                        
                         send_notification(camera_ip,prediction_id,title)
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
