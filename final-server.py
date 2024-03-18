@@ -156,7 +156,7 @@ def save_token():
     return jsonify(message="Token saved successfully."), 200
 
 
-@app.route('/get_annotated_image', methods=['GET'])
+@app.route('/get_annotated_image', methods=['POST'])
 def get_annotated_image():
     try:
         # Get prediction ID and camera IP from request
