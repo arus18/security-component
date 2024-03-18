@@ -72,7 +72,7 @@ class_names = [
 
 # Configuration parameters
 batch_size = 16
-object_detection_threshold = 0.5
+object_detection_threshold = 0.7
 video_classification_threshold = 0.5
 
 # Function to perform object detection on a batch of frames
@@ -219,7 +219,7 @@ def detect_objects():
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
 
                         prediction_id = str(uuid.uuid4())
-
+                        title = f"Harmful object detetcted in, {camera_name}"
                         send_notification(camera_ip,prediction_id)
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
@@ -288,8 +288,7 @@ def classify_video():
         return jsonify(error=str(e)), 500
 
 
-def send_notification(camera_ip, prediction_id):
-    title = "Notification Title"
+def send_notification(camera_ip, prediction_id,title):
     body = f"{camera_ip} | {prediction_id}"
 
     message = messaging.Message(
