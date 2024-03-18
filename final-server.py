@@ -72,7 +72,7 @@ class_names = [
 
 # Configuration parameters
 batch_size = 16
-object_detection_threshold = 0.48
+object_detection_threshold = 0.5
 video_classification_threshold = 0.5
 
 # Function to perform object detection on a batch of frames
@@ -136,21 +136,6 @@ def perform_video_classification_batch(camera_ip, frames):
         print(f"Error during video classification: {e}")
         return []
 
-def draw_boxes(frame, results):
-    annotated_frame = frame.copy()
-
-    # Process object detection results
-    for r in results:
-        boxes = r.boxes
-
-        for box in boxes:
-            # Extract bounding box coordinates
-            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-
-            # Draw bounding box on the frame
-            cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-    return annotated_frame
 # Function to send Firebase push notification
 #def send_push_notification(camera_ip, predictions):
 
@@ -162,6 +147,37 @@ def save_token():
 
     # Return a 200 OK response with the JSON message
     return jsonify(message="Token saved successfully."), 200
+
+
+@app.route('/get_annotated_image', methods=['GET'])
+def get_annotated_image():
+    try:
+        # Get prediction ID and camera IP from request
+        prediction_id = request.args.get('prediction_id')
+        camera_ip = request.args.get('camera_ip')
+
+        if camera_ip in recent_object_detection_predictions:
+            # Find the prediction with matching prediction ID
+            predictions = recent_object_detection_predictions[camera_ip]
+            for prediction in predictions:
+                if prediction['prediction_id'] == prediction_id:
+                    # Retrieve the annotated image
+                    annotated_image = prediction['image']
+
+                    # Convert the image to base64
+                    base64_image = base64.b64encode(annotated_image).decode('utf-8')
+
+                    return jsonify({'annotated_image_base64': base64_image})
+
+            return jsonify(error='Prediction ID not found for the specified camera IP'), 404
+        else:
+            return jsonify(error='No recent predictions found for the specified camera IP'), 404
+
+    except Exception as e:
+        traceback.print_exc()
+        error_message = f"Error retrieving annotated image: {e}"
+        print(error_message)
+        return jsonify(error=error_message), 500
 
 
 # Endpoint for object detection
@@ -178,6 +194,8 @@ def detect_objects():
     try:
         # Read camera IP from the request
         camera_ip = request.form.get('camera_ip')
+
+        camera_name = request.form.get('camera_name')
 
         # Read image files from the batch
         frames = [request.files[f'frame{i}'].read() for i in range(batch_size)]
@@ -199,15 +217,21 @@ def detect_objects():
                     cls = int(box.cls[0])
                     # Check for harmful object
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
+
+                        prediction_id = str(uuid.uuid4())
+
+                        send_notification(camera_ip,prediction_id)
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
+                        prediction_id = str(uuid.uuid4())
                         # Save annotated frame to recent predictions
                         encoded_frame = cv2.imencode('.jpg', annotated_frame)[1].tobytes()
                         recent_object_detection_predictions.setdefault(camera_ip, []).append({
                             'confidence_score': confidence,
-                            'image': encoded_frame
+                            'image': encoded_frame,
+                            'prediction_id':prediction_id
                         })
 
         # Limit the recent predictions size for the specific camera
@@ -263,25 +287,17 @@ def classify_video():
         print(f"Error during video classification: {e}")
         return jsonify(error=str(e)), 500
 
-@app.route('/send-notification', methods=['POST'])
-def send_notification():
-    data = request.json
-    registration_token = data.get('registration_token')
-    title = data.get('title')
-    body = data.get('body')
 
-    # Create a message
+def send_notification(camera_ip, prediction_id):
+    title = "Notification Title"
+    body = f"Camera IP: {camera_ip} | Prediction ID: {prediction_id}"
+    client_token = "device_registration_token"  # Specify the registration token of the device
+
     message = messaging.Message(
         notification=messaging.Notification(title=title, body=body),
-        token=client_token,  # Specify the registration token of the device
+        token=client_token,
     )
-
-    # Send the message
-    try:
-        response = messaging.send(message)
-        return jsonify({"message": "Notification sent successfully.", "response": response}), 200
-    except Exception as e:
-        return jsonify({"message": "Failed to send notification.", "error": str(e)}), 500
+    response = messaging.send(message)
 
 
 @app.route('/recent_object_detection_predictions', methods=['GET'])
