@@ -44,6 +44,8 @@ activities_to_detect = {}
 client_token = None
 max_recent_predictions = 10  # Maximum number of recent predictions to store
 RECENT_PREDICTIONS_SIZE = 10
+# Define a variable to store the notification sending status (True: enabled, False: disabled)
+send_notifications_enabled = True
 
 recent_predictions = []
 predictions_list = []
@@ -149,7 +151,7 @@ def save_token():
     return jsonify(message="Token saved successfully."), 200
 
 
-@app.route('/get_annotated_image', methods=['GET'])
+@app.route('/get_annotated_image', methods=['POST'])
 def get_annotated_image():
     try:
         # Get prediction ID and camera IP from request
@@ -256,6 +258,20 @@ def save_activities():
     activities_to_detect[camera_ip] = activities
     print(activities_to_detect)
     return jsonify(message="Activities saved successfully.")
+
+
+@app.route('/enable_notifications', methods=['POST'])
+def enable_notifications():
+  global send_notifications_enabled
+  send_notifications_enabled = True
+  return jsonify({'message': 'Notification sending enabled.'}), 200
+
+
+@app.route('/disable_notifications', methods=['POST'])
+def disable_notifications():
+  global send_notifications_enabled
+  send_notifications_enabled = False
+  return jsonify({'message': 'Notification sending disabled.'}), 200
 
 
 
