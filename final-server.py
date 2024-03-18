@@ -220,7 +220,7 @@ def detect_objects():
 
                         prediction_id = str(uuid.uuid4())
                         title = f"Harmful object detetcted in, {camera_name}"
-                        send_notification(camera_ip,prediction_id)
+                        send_notification(camera_ip,prediction_id,title)
                         # Draw bounding box on the annotated frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
