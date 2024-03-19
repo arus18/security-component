@@ -44,8 +44,8 @@ recent_object_detection_predictions = {}  # Dictionary to store recent object de
 recent_video_classification_predictions = {}  # Dictionary to store recent video classification predictions for each camera
 activities_to_detect = {}
 client_token = None
-max_recent_predictions = 20  # Maximum number of recent predictions to store
-RECENT_PREDICTIONS_SIZE = 20
+max_recent_predictions = 30  # Maximum number of recent predictions to store
+RECENT_PREDICTIONS_SIZE = 30
 # Define a variable to store the notification sending status (True: enabled, False: disabled)
 send_notifications_enabled = True
 
@@ -131,6 +131,10 @@ def perform_video_classification_batch(camera_ip, frames):
             predicted_class = class_names[max_confidence_index]
             confidence_score = clip_prediction[max_confidence_index]
             print(predicted_class)
+            if predicted_class in activities_to_detect:
+                # Send notification
+                title = f"Activity detected, {predicted_class}"
+                send_notification(camera_ip, clip_id, title)
             # Generate clip ID
             clip_id = f"{camera_ip}_clip_{clip_index}"
 
@@ -299,7 +303,7 @@ def classify_video():
         perform_video_classification_batch(camera_ip, imgs)
 
         # Limit the recent predictions size for the specific camera
-        recent_video_classification_predictions[camera_ip] = recent_video_classification_predictions[camera_ip][-RECENT_PREDICTIONS_SIZE:]
+        #recent_video_classification_predictions[camera_ip] = recent_video_classification_predictions[camera_ip][-RECENT_PREDICTIONS_SIZE:]
 
         # Send push notification for harmful objects
         #send_push_notification(camera_ip, predictions_list)
