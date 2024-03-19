@@ -226,6 +226,7 @@ def detect_objects():
                 for box in boxes:
                     # Extract confidence and class index
                     confidence = box.conf[0].item()
+                    print(confidence)
                     cls = int(box.cls[0])
                     # Check for harmful object
                     if cls == harmful_object_class_index and confidence > object_detection_threshold:
