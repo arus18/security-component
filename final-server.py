@@ -132,13 +132,13 @@ def perform_video_classification_batch(camera_ip, frames):
             confidence_score = clip_prediction[max_confidence_index]
             print(predicted_class)
             title = f"Activity detected"
-            send_notification(camera_ip, clip_id, title)
             """if predicted_class in activities_to_detect:
                 # Send notification
                 title = f"Activity detected"
                 send_notification(camera_ip, clip_id, title)"""
             # Generate clip ID
             clip_id = f"{camera_ip}_clip_{clip_index}"
+            send_notification(camera_ip, clip_id, title)
 
             # Save video clip with ID
             recent_video_classification_predictions.setdefault(camera_ip, []).append({'clip_id': clip_id, 'clip': frames[clip_index], 'prediction': {'predicted_class': predicted_class, 'confidence_score': float(confidence_score)}})
