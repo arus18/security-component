@@ -131,10 +131,12 @@ def perform_video_classification_batch(camera_ip, frames):
             predicted_class = class_names[max_confidence_index]
             confidence_score = clip_prediction[max_confidence_index]
             print(predicted_class)
-            if predicted_class in activities_to_detect:
+            title = f"Activity detected"
+            send_notification(camera_ip, clip_id, title)
+            """if predicted_class in activities_to_detect:
                 # Send notification
-                title = f"Activity detected, {predicted_class}"
-                send_notification(camera_ip, clip_id, title)
+                title = f"Activity detected"
+                send_notification(camera_ip, clip_id, title)"""
             # Generate clip ID
             clip_id = f"{camera_ip}_clip_{clip_index}"
 
