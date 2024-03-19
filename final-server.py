@@ -79,7 +79,7 @@ class_names = [
 
 # Configuration parameters
 batch_size = 16
-object_detection_threshold = 0.7
+object_detection_threshold = 0.5
 video_classification_threshold = 0.5
 
 # Function to perform object detection on a batch of frames
