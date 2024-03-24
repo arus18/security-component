@@ -26,15 +26,6 @@ import time
 
 logging.basicConfig(level=logging.INFO)
 
-# Set up Ngrok authentication token
-#ngrok.set_auth_token("2cwuKNigB4MOmhcqz2V7iaAsZqF_7f797rB1svrxrUAKGXmAK")
-
-# Establish Ngrok tunnel with custom domain
-#ngrok_tunnel = ngrok.connect(80, bind_tls=True, hostname="discrete-lately-killdeer.ngrok-free.app")
-
-# Print Ngrok URL
-#print("Ngrok Tunnel URL:", ngrok_tunnel.public_url)
-
 app = Flask(__name__)
 CORS(app)
 
