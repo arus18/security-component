@@ -195,6 +195,7 @@ def detect_objects():
     """
 
     try:
+        print("called")
         # Read camera IP from the request
         camera_ip = request.form.get('camera_ip')
 
