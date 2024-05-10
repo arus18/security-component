@@ -21,6 +21,7 @@ from tensorflow import keras
 from datetime import datetime
 import uuid
 import time
+from video_classifier import classify_video
 
 
 
@@ -309,6 +310,33 @@ def classify_video():
         print(f"Error during video classification: {e}")
         return jsonify(error=str(e)), 500
 
+@app.route('/classify_video_tf', methods=['POST'])
+def classify_video_endpoint():
+    try:
+        # Read camera IP from the request
+        camera_ip = request.form.get('camera_ip')
+
+        # Read frames from the request
+        frames = [request.files[f'frame{i}'].read() for i in range(batch_size)]
+
+        # Convert frames to NumPy arrays
+        imgs = [cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_COLOR) for frame in frames]
+
+        # Perform video classification
+        predictions = classify_video(imgs)
+
+        # Print predictions (for testing)
+        for label, p in predictions:
+            print(f'{label:20s}: {p:.3f}')
+
+        # Send push notification for harmful objects
+        # send_push_notification(camera_ip, predictions)
+
+        return jsonify(success=True)
+
+    except Exception as e:
+        print(f"Error during video classification: {e}")
+        return jsonify(error=str(e)), 500
 
 def send_notification(camera_ip, prediction_id, title):
     global last_notification_time
