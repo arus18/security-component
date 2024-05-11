@@ -42,7 +42,7 @@ def classify_video_tf(frames):
 
     initial_state = model.init_states(frames_tensor[tf.newaxis, ...].shape)
     inputs = initial_state.copy()
-    inputs['image'] = frames_tensor[:, 0:1, ...]
+    inputs['image'] = frames_tensor[tf.newaxis, 0:1, ...]
     logits, new_state = model(inputs)
     logits = logits[0]
     probs = tf.nn.softmax(logits, axis=-1)
