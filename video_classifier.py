@@ -36,8 +36,12 @@ def classify_video_tf(frames):
     # Convert list of frames to a tensor
     frames_tensor = tf.convert_to_tensor(frames_tensor)
 
+    print("Shape of frames_tensor before adding batch axis:", frames_tensor.shape)  # Add this print statement
+
     # Add a batch axis
     frames_tensor = frames_tensor[tf.newaxis, ...]
+
+    print("Shape of frames_tensor after adding batch axis:", frames_tensor.shape)  # Add this print statement
 
     initial_state = model.init_states(frames_tensor.shape)
     inputs = initial_state.copy()
@@ -50,6 +54,7 @@ def classify_video_tf(frames):
     predictions = get_top_k(probs)
 
     return predictions
+
 
 
 # Get top_k labels and probabilities
