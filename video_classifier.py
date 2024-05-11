@@ -38,12 +38,9 @@ def classify_video_tf(frames):
 
     print("Shape of frames_tensor before adding batch axis:", frames_tensor.shape)  # Add this print statement
 
-    # Add a batch axis
-    frames_tensor = frames_tensor[tf.newaxis, ...]
+    # Add this print statement
 
-    print("Shape of frames_tensor after adding batch axis:", frames_tensor.shape)  # Add this print statement
-
-    initial_state = model.init_states(frames_tensor.shape)
+    initial_state = model.init_states(frames_tensor[tf.newaxis, ...].shape)
     inputs = initial_state.copy()
     inputs['image'] = frames_tensor[:, 0:1, ...]
     logits, new_state = model(inputs)
