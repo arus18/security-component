@@ -50,7 +50,7 @@ def classify_video_tf(frames):
     logits, new_state = model(inputs)
     logits = logits[0]
     probs = tf.nn.softmax(logits, axis=-1)
-
+    print(probs)
     # Get top predictions
     predictions = get_top_k(probs)
 
