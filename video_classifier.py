@@ -4,9 +4,13 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import pathlib
 
+id = 'a2'
+mode = 'stream'
+version = '3'
+hub_url = f'https://tfhub.dev/tensorflow/movinet/{id}/{mode}/kinetics-600/classification/{version}'
 # Load the TensorFlow model from the local directory
 model_path = 'archive'
-model = hub.load(model_path)
+model = hub.load(hub_url)
 
 # Get labels
 labels_path = 'kinetics_600_labels.txt'  # Provide the path to the labels file
