@@ -21,7 +21,7 @@ from tensorflow import keras
 from datetime import datetime
 import uuid
 import time
-from video_classifier import classify_video
+from video_classifier import classify_video_tf
 
 
 
