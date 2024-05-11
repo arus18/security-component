@@ -19,7 +19,7 @@ batch_size = 10
 image_size = (224, 224)
 
 # Function to perform video classification
-def classify_video(frames):
+def classify_video_tf(frames):
     frames_tensor = []
     for frame in frames:
         # Resize the frame

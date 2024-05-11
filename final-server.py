@@ -323,7 +323,7 @@ def classify_video_endpoint():
         imgs = [cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_COLOR) for frame in frames]
 
         # Perform video classification
-        predictions = classify_video(imgs)
+        predictions = classify_video_tf(imgs)
 
         # Print predictions (for testing)
         for label, p in predictions:
