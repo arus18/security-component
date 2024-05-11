@@ -71,6 +71,8 @@ def get_top_k(probs, k=5, label_map=KINETICS_600_LABELS):
     Returns:
       a tuple of the top-k labels and probabilities.
     """
+    print("Shape of probs tensor:", probs.shape)
+
     # Sort predictions to find top_k
     top_predictions = tf.argsort(probs, axis=-1, direction='DESCENDING')[:, :k]
     # collect the labels of top_k predictions
