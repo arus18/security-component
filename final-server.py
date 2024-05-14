@@ -323,7 +323,7 @@ def classify_video_endpoint():
     global video_files
     camera_ip = request.form.get('camera_ip')
 
-    frames = [request.files[f'frame{i}'].read() for i in range(16)]
+    frames = [request.files[f'frame{i}'].read() for i in range(len(request.files))]
     print(len(frames))
     imgs = [cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_COLOR) for frame in frames]
 
