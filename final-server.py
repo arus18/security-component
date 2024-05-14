@@ -41,6 +41,8 @@ RECENT_PREDICTIONS_SIZE = 30
 # Define a variable to store the notification sending status (True: enabled, False: disabled)
 send_notifications_enabled = True
 
+video_files = {}
+
 last_notification_time = None
 delay_between_notifications = 10
 
@@ -196,7 +198,6 @@ def detect_objects():
     """
 
     try:
-        print("called")
         # Read camera IP from the request
         camera_ip = request.form.get('camera_ip')
 
@@ -310,28 +311,83 @@ def classify_video():
         print(f"Error during video classification: {e}")
         return jsonify(error=str(e)), 500
 
+def generate_thumbnail(frame):
+    thumbnail = cv2.resize(frame, (100, 100))
+    ret, buffer = cv2.imencode('.jpg', thumbnail)
+    thumbnail_bytes = buffer.tobytes()
+    thumbnail_base64 = base64.b64encode(thumbnail_bytes).decode('utf-8')
+    return thumbnail_base64
+
 @app.route('/classify_video_tf', methods=['POST'])
 def classify_video_endpoint():
-    # Read camera IP from the request
+    global video_files
+
     camera_ip = request.form.get('camera_ip')
 
-    # Read frames from the request
     frames = [request.files[f'frame{i}'].read() for i in range(batch_size)]
-
-    # Convert frames to NumPy arrays
     imgs = [cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_COLOR) for frame in frames]
 
-    # Perform video classification
     predictions = classify_video_tf(imgs)
 
-    # Print predictions (for testing)
+    harmful_label_predicted = False
     for label, p in predictions:
         print(f'{label:20s}: {p:.3f}')
+        if label == 'clap':
+            harmful_label_predicted = True
+            break
 
-    # Send push notification for harmful objects
-    # send_push_notification(camera_ip, predictions)
+    if harmful_label_predicted:
+        video_filename = f"{camera_ip}_{time.strftime('%Y%m%d_%H%M%S')}.avi"
+        video_files[camera_ip] = video_files.get(camera_ip, []) + [video_filename]
+
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(video_filename, fourcc, 20.0, (640, 480))
+
+        thumbnails = [generate_thumbnail(frame) for frame in imgs]
+
+        video_files[camera_ip] = video_files.get(camera_ip, []) + [{"video_filename": video_filename, "thumbnails": thumbnails}]
+
+        for frame in imgs:
+            out.write(frame)
+
+        out.release()
 
     return jsonify(success=True)
+
+@app.route('/recent_video_clips', methods=['GET'])
+def recent_video_clips():
+    camera_ip = request.args.get('camera_ip')
+
+    if camera_ip in video_files:
+        recent_clips = video_files[camera_ip][-10:] 
+
+        thumbnails = []
+        for clip in recent_clips:
+            for thumbnail in clip['thumbnails']:
+                thumbnail_base64 = base64.b64encode(thumbnail).decode('utf-8')
+                thumbnails.append({"thumbnail_base64": thumbnail_base64, "video_file_name": clip['video_filename']})
+
+        if thumbnails:
+            return jsonify(thumbnails)
+        else:
+            return jsonify({"message": "No recent video clips available for the specified camera IP."}), 404
+    else:
+        return jsonify({"message": "No video clips available for the specified camera IP."}), 404
+        
+
+@app.route('/get_video_clip', methods=['GET'])
+def get_video_clip():
+    video_file_name = request.args.get('video_file_name')
+
+    if video_file_name:
+        file_path = os.path.join("video_directory", video_file_name)
+
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True)
+        else:
+            return jsonify({"message": "Video file not found."}), 404
+    else:
+        return jsonify({"message": "Video file name not provided."}), 400
 
 
 def send_notification(camera_ip, prediction_id, title):

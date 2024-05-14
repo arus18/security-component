@@ -40,7 +40,7 @@ def classify_video_tf(frames):
     # Convert list of frames to a tensor
     frames_tensor = tf.convert_to_tensor(frames_tensor)
 
-    print("Shape of frames_tensor before adding batch axis:", frames_tensor.shape)  # Add this print statement
+    #print("Shape of frames_tensor before adding batch axis:", frames_tensor.shape)  # Add this print statement
 
     # Add this print statement
 
@@ -50,7 +50,7 @@ def classify_video_tf(frames):
     logits, new_state = model(inputs)
     logits = logits[0]
     probs = tf.nn.softmax(logits, axis=-1)
-    print(probs)
+    #print(probs)
     # Get top predictions
     predictions = get_top_k(probs)
 
