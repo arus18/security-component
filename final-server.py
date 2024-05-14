@@ -321,10 +321,11 @@ def generate_thumbnail(frame):
 @app.route('/classify_video_tf', methods=['POST'])
 def classify_video_endpoint():
     global video_files
-
+    print(called)
     camera_ip = request.form.get('camera_ip')
 
     frames = [request.files[f'frame{i}'].read() for i in range(batch_size)]
+    print(len(frames))
     imgs = [cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_COLOR) for frame in frames]
 
     predictions = classify_video_tf(imgs)
